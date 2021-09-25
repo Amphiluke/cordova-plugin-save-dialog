@@ -4,6 +4,9 @@ let FileReader = moduleMapper.getOriginalSymbol(window, "FileReader") || window.
 
 module.exports = {
     saveFile(blob, name = "") {
+        if (window.cordova.platformId !== "android") {
+            return Promise.reject("Unsupported platform");
+        }
         return new Promise((resolve, reject) => {
             exec(resolve, reject, "SaveDialog", "locateFile", [blob.type || "application/octet-stream", name]);
         }).then(uri => {
