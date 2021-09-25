@@ -19,7 +19,7 @@ Call this method to open the Save dialog and store raw contents in a file. The m
 * file contents as a Blob instance,
 * optional file name to display on default (the user may change it manually though).
 
-To construct a Blob representation for a file contents, either use the [Blob constructor](https://developer.mozilla.org/en-US/docs/Web/API/Blob/Blob) directly:
+To construct a Blob representation for a file contents, either use the [`Blob` constructor](https://developer.mozilla.org/en-US/docs/Web/API/Blob/Blob) directly:
 
 ```javascript
 let blob = new Blob(["file contents"], {type: "text/plain"});
@@ -31,7 +31,7 @@ cordova.plugins.saveDialog.saveFile(blob, fileName).then(() => {
 });
 ```
 
-or apply other methods of blob generation (such as [Response.blob()](https://developer.mozilla.org/en-US/docs/Web/API/Response/blob) for a network-fetched content):
+or apply other methods of blob generation (such as [`Response.blob()`](https://developer.mozilla.org/en-US/docs/Web/API/Response/blob) for a network-fetched content):
 
 ```javascript
 try {
