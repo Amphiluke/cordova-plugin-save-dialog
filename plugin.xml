@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" id="cordova-plugin-save-dialog" version="0.1.0">
+    <name>Save Dialog</name>
+    <description>Cordova plugin for Android to display the native Save dialog and store a file in the selected location</description>
+    <license>MIT</license>
+    <keywords>cordova,save,dialog</keywords>
+    <js-module src="www/save-dialog.js" name="SaveDialog">
+        <clobbers target="cordova.plugins.saveDialog" />
+    </js-module>
+
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="SaveDialog" >
+                <param name="android-package" value="io.github.amphiluke.SaveDialog"/>
+            </feature>
+        </config-file>
+        <source-file src="src/android/SaveDialog.java" target-dir="src/io/github/amphiluke" />
+    </platform>
+</plugin>

@@ -1,0 +1,22 @@
+{
+  "name": "cordova-plugin-save-dialog",
+  "version": "0.1.0",
+  "description": "Cordova plugin for Android to display the native Save dialog and store a file in the selected location",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Amphiluke/cordova-plugin-save-dialog.git"
+  },
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-android",
+    "save",
+    "dialog"
+  ],
+  "author": "Amphiluke",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Amphiluke/cordova-plugin-save-dialog/issues"
+  },
+  "homepage": "https://github.com/Amphiluke/cordova-plugin-save-dialog#readme"
+}
