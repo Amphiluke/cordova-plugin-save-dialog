@@ -9,7 +9,7 @@ module.exports = {
         }
         return new Promise((resolve, reject) => {
             exec(resolve, reject, "SaveDialog", "locateFile", [blob.type || "application/octet-stream", name]);
-        }).then(uri => {
+        }).then(uri => new Promise((resolve, reject) => {
             let reader = new FileReader();
             reader.onload = () => {
                 exec(resolve, reject, "SaveDialog", "saveFile", [uri, reader.result]);
@@ -21,6 +21,6 @@ module.exports = {
                 reject("Blob reading has been aborted");
             };
             reader.readAsArrayBuffer(blob);
-        });
+        }));
     }
 };
