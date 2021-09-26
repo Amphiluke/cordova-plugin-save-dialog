@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" id="cordova-plugin-save-dialog" version="0.1.0">
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" id="cordova-plugin-save-dialog" version="0.1.1">
     <name>Save Dialog</name>
     <description>Cordova plugin for Android to display the native Save dialog and store a file in the selected location</description>
     <license>MIT</license>
     <keywords>cordova,save,dialog</keywords>
-    <js-module src="www/save-dialog.js" name="SaveDialog">
+    <js-module src="www/SaveDialog.js" name="SaveDialog">
         <clobbers target="cordova.plugins.saveDialog" />
+    </js-module>
+    <js-module src="www/BlobKeeper.js" name="BlobKeeper">
     </js-module>
 
     <platform name="android">

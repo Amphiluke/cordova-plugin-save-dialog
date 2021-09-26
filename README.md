@@ -38,6 +38,7 @@ try {
     let response = await fetch(`https://avatars.dicebear.com/api/avataaars/${Math.random()}.svg`);
     let blob = await response.blob();
     await cordova.plugins.saveDialog.saveFile(blob, "random-avatar.svg");
+    console.info("The file has been successfully saved");
 } catch (e) {
     console.error(e);
 }
