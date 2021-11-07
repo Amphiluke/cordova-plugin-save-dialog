@@ -23,9 +23,6 @@ let saveFile = (uri, blob) => new Promise((resolve, reject) => {
 
 module.exports = {
     saveFile(blob, name = "") {
-        if (window.cordova.platformId !== "android") {
-            return Promise.reject("Unsupported platform");
-        }
         return keepBlob(blob) // see the “resume” event handler below
             .then(() => locateFile(blob.type, name))
             .then(uri => saveFile(uri, blob))

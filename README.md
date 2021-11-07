@@ -1,6 +1,10 @@
 # cordova-plugin-save-dialog
 
-This Cordova plugin for Android displays the native Save dialog which allows users to store a file in the selected location. The plugin utilizes the Storage Access Framework to save a file in a user-selected location as described in the [Android developer guide](https://developer.android.com/training/data-storage/shared/documents-files#create-file). Platforms other than Android are not supported currently.
+This Cordova plugin displays the native Save dialog which allows users to store a file in the selected location.
+
+In Android, the plugin utilizes the Storage Access Framework to save a file in a user-selected location as described in the [Android developer guide](https://developer.android.com/training/data-storage/shared/documents-files#create-file).
+
+In iOS, the `UIDocumentPickerViewController`’s method [`initForExportingURLs:asCopy:`](https://developer.apple.com/documentation/uikit/uidocumentpickerviewcontroller/3566731-initforexportingurls?language=objc) is used for opening a document picker that can export the file to the selected folder. Note that this method is only available in iOS 14.0+, so older iOS versions are not supported by the plugin.
 
 ## Installation
 
