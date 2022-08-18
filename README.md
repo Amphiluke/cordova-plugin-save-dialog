@@ -23,13 +23,15 @@ Call this method to open the Save dialog and store raw contents in a file. The m
 * file contents as a Blob instance,
 * optional file name to display on default (the user may change it manually though).
 
+The method returns a promise whose fulfillment value is a URI of the saved file in the user-selected location.
+
 To construct a Blob representation for a file contents, either use the [`Blob` constructor](https://developer.mozilla.org/en-US/docs/Web/API/Blob/Blob) directly:
 
 ```javascript
 let blob = new Blob(["file contents"], {type: "text/plain"});
 let fileName = "my-file.txt";
-cordova.plugins.saveDialog.saveFile(blob, fileName).then(() => {
-    console.info("The file has been successfully saved");
+cordova.plugins.saveDialog.saveFile(blob, fileName).then(uri => {
+    console.info("The file has been successfully saved to", uri);
 }).catch(reason => {
     console.warn(reason);
 });
@@ -41,9 +43,11 @@ or apply other methods of blob generation (such as [`Response.blob()`](https://d
 try {
     let response = await fetch(`https://avatars.dicebear.com/api/avataaars/${Math.random()}.svg`);
     let blob = await response.blob();
-    await cordova.plugins.saveDialog.saveFile(blob, "random-avatar.svg");
-    console.info("The file has been successfully saved");
+    let uri = await cordova.plugins.saveDialog.saveFile(blob, "random-avatar.svg");
+    console.info("The file has been successfully saved to", uri);
 } catch (e) {
     console.error(e);
 }
 ```
+
+Do not try to use the returned URI for getting file access. It is provided for information purposes only. The user stores a file outside the application sandbox, so access to the saved resource is to be considered restricted.

@@ -70,7 +70,7 @@ public class SaveDialog extends CordovaPlugin {
             FileOutputStream fileOutputStream = new FileOutputStream(pfd.getFileDescriptor());
             try {
                 fileOutputStream.write(rawData);
-                this.callbackContext.success();
+                this.callbackContext.success(uri.toString());
             } catch (Exception e) {
                 this.callbackContext.error(e.getMessage());
                 e.printStackTrace();

@@ -26,8 +26,9 @@ module.exports = {
         return keepBlob(blob) // see the “resume” event handler below
             .then(() => locateFile(blob.type, name))
             .then(uri => saveFile(uri, blob))
-            .then(() => {
+            .then(uri => {
                 clearBlob();
+                return uri;
             })
             .catch(reason => {
                 clearBlob();

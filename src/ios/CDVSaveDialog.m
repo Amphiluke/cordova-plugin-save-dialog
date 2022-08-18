@@ -28,7 +28,8 @@
 - (void)documentPicker:(UIDocumentPickerViewController*)picker didPickDocumentsAtURLs:(NSArray<NSURL*>*)urls
 {
     if ([urls count] > 0) {
-        [self sendPluginResult:YES message:nil];
+        NSString* url = [[urls objectAtIndex:0] absoluteString];
+        [self sendPluginResult:YES message:url];
     } else {
         [self sendPluginResult:NO message:@"Unknown error"];
     }
@@ -73,7 +74,7 @@
 {
     CDVPluginResult* pluginResult = nil;
     if (success) {
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:message];
     } else {
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:message];
     }
