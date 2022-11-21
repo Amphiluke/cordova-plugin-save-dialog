@@ -7,10 +7,10 @@ let locateFile = (type, name) => new Promise((resolve, reject) => {
     exec(resolve, reject, "SaveDialog", "locateFile", [type || "application/octet-stream", name]);
 });
 
-let saveFile = (uri, blob) => new Promise((resolve, reject) => {
+let saveFile = (uri, blob, clearFile) => new Promise((resolve, reject) => {
     let reader = new FileReader();
     reader.onload = () => {
-        exec(resolve, reject, "SaveDialog", "saveFile", [uri, reader.result]);
+        exec(resolve, reject, "SaveDialog", "saveFile", [uri, reader.result, clearFile]);
     };
     reader.onerror = () => {
         reject(reader.error);
@@ -21,11 +21,36 @@ let saveFile = (uri, blob) => new Promise((resolve, reject) => {
     reader.readAsArrayBuffer(blob);
 });
 
+let saveFileInChunks = (uri, blob) => {
+    const BLOCK_SIZE = 1024 * 1024;
+    let writtenSize = 0;
+
+    function saveNextChunk(clearFile) {
+        const size = Math.min(BLOCK_SIZE, blob.size - writtenSize);
+        const chunk = blob.slice(writtenSize, writtenSize + size);
+
+        writtenSize += size;
+
+        return saveFile(uri, chunk, clearFile);
+    }
+
+    return new Promise(async (resolve, reject) => {
+        let i = 0;
+
+        while(writtenSize < blob.size) {
+            await saveNextChunk(i === 0).catch((err) => reject(err));
+            i++;
+        }
+
+        resolve();
+    });
+}
+
 module.exports = {
     saveFile(blob, name = "") {
         return keepBlob(blob) // see the “resume” event handler below
             .then(() => locateFile(blob.type, name))
-            .then(uri => saveFile(uri, blob))
+            .then(uri => saveFileInChunks(uri, blob))
             .then(uri => {
                 clearBlob();
                 return uri;
