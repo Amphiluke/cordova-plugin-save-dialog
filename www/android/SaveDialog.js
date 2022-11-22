@@ -36,13 +36,21 @@ let saveFileInChunks = (uri, blob) => {
 
     return new Promise(async (resolve, reject) => {
         let i = 0;
+        let uri = '';
+        let error = null;
 
         while(writtenSize < blob.size) {
-            await saveNextChunk(i === 0).catch((err) => reject(err));
+            [uri, error] = await saveNextChunk(i === 0).then((result) => [result, null]).catch((err) => [null, err]);
+
+            if (error !== null) {
+                reject(error);
+                return;
+            }
+
             i++;
         }
 
-        resolve();
+        resolve(uri);
     });
 }
 
