@@ -5,32 +5,39 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
-// import android.provider.DocumentsContract;
-import android.util.Base64;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaArgs;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
-import java.nio.channels.FileChannel;
 
 public class SaveDialog extends CordovaPlugin {
     private static final int LOCATE_FILE = 1;
 
     private CallbackContext callbackContext;
+    private final ByteArrayOutputStream fileByteStream = new ByteArrayOutputStream();
 
     @Override
-    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+    public boolean execute(String action, CordovaArgs args, CallbackContext callbackContext) throws JSONException {
         this.callbackContext = callbackContext;
-        if (action.equals("locateFile")) {
-            this.locateFile(args.getString(0), args.getString(1));
-        } else if (action.equals("saveFile")) {
-            this.saveFile(Uri.parse(args.getString(0)), args.getString(1), args.getBoolean(2));
-        } else {
-            return false;
+        switch (action) {
+            case "locateFile":
+                this.locateFile(args.getString(0), args.getString(1));
+                this.fileByteStream.reset();
+                break;
+            case "addChunk":
+                this.addChunk(args.getArrayBuffer(0));
+                break;
+            case "saveFile":
+                this.saveFile(Uri.parse(args.getString(0)), this.fileByteStream.toByteArray());
+                this.fileByteStream.reset();
+                break;
+            default:
+                return false;
         }
         return true;
     }
@@ -40,9 +47,6 @@ public class SaveDialog extends CordovaPlugin {
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType(type);
         intent.putExtra(Intent.EXTRA_TITLE, name);
-        // TODO Optionally, specify a URI for the directory that should be opened in
-        // the system file picker when your app creates the document.
-        // intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
         cordova.startActivityForResult(this, intent, SaveDialog.LOCATE_FILE);
     }
 
@@ -64,18 +68,21 @@ public class SaveDialog extends CordovaPlugin {
         this.callbackContext = callbackContext;
     }
 
-    private void saveFile(Uri uri, String data, boolean clearFile) {
+    private void addChunk(byte[] chunk) {
         try {
-            byte[] rawData = Base64.decode(data, Base64.DEFAULT);
-            ParcelFileDescriptor pfd = cordova.getActivity().getContentResolver().openFileDescriptor(uri, "wa");
+            this.fileByteStream.write(chunk);
+            this.callbackContext.success();
+        } catch (Exception e) {
+            this.callbackContext.error(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void saveFile(Uri uri, byte[] rawData) {
+        try {
+            ParcelFileDescriptor pfd = cordova.getActivity().getContentResolver().openFileDescriptor(uri, "w");
             FileOutputStream fileOutputStream = new FileOutputStream(pfd.getFileDescriptor());
-
             try {
-                if (clearFile) {
-                    FileChannel fChan = fileOutputStream.getChannel();
-                    fChan.truncate(0);
-                }
-
                 fileOutputStream.write(rawData);
                 this.callbackContext.success(uri.toString());
             } catch (Exception e) {

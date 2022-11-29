@@ -3,77 +3,66 @@ let {keep: keepBlob, get: getBlob, clear: clearBlob} = require("./BlobKeeper");
 let moduleMapper = require("cordova/modulemapper");
 let FileReader = moduleMapper.getOriginalSymbol(window, "FileReader") || window.FileReader;
 
-let locateFile = (type, name) => new Promise((resolve, reject) => {
-    exec(resolve, reject, "SaveDialog", "locateFile", [type || "application/octet-stream", name]);
-});
-
-let saveFile = (uri, blob, clearFile) => new Promise((resolve, reject) => {
-    let reader = new FileReader();
-    reader.onload = () => {
-        exec(resolve, reject, "SaveDialog", "saveFile", [uri, reader.result, clearFile]);
-    };
-    reader.onerror = () => {
-        reject(reader.error);
-    };
-    reader.onabort = () => {
-        reject("Blob reading has been aborted");
-    };
-    reader.readAsArrayBuffer(blob);
-});
-
-let saveFileInChunks = (uri, blob) => {
-    const BLOCK_SIZE = 1024 * 1024;
-    let writtenSize = 0;
-
-    function saveNextChunk(clearFile) {
-        const size = Math.min(BLOCK_SIZE, blob.size - writtenSize);
-        const chunk = blob.slice(writtenSize, writtenSize + size);
-
-        writtenSize += size;
-
-        return saveFile(uri, chunk, clearFile);
-    }
-
-    return new Promise(async (resolve, reject) => {
-        let i = 0;
-        let uri = '';
-        let error = null;
-
-        while(writtenSize < blob.size) {
-            [uri, error] = await saveNextChunk(i === 0).then((result) => [result, null]).catch((err) => [null, err]);
-
-            if (error !== null) {
-                reject(error);
-                return;
-            }
-
-            i++;
-        }
-
-        resolve(uri);
+function blobToArrayBuffer(blob) {
+    // Using FileReader.readAsArrayBuffer() until Blob.arrayBuffer() is widely supported
+    return new Promise((resolve, reject) => {
+        let reader = new FileReader();
+        reader.onload = () => {
+            resolve(reader.result);
+        };
+        reader.onerror = () => {
+            reject(reader.error);
+        };
+        reader.onabort = () => {
+            reject("Blob reading has been aborted");
+        };
+        reader.readAsArrayBuffer(blob);
     });
 }
 
+function asyncExec(action, ...args) {
+    return new Promise((resolve, reject) => {
+        exec(resolve, reject, "SaveDialog", action, args);
+    });
+}
+
+// Transfer file contents to the plugin chunk by chunk to overcome the limitation on the size of data that can be
+// converted to an array buffer, serialized and passed to the native Java component (see PR #2).
+async function addChunks(blob) {
+    let getBlobChunks = function* () {
+        const CHUNK_SIZE = 1024 ** 2; // 1 MB
+        let transferredLength = 0;
+        while (transferredLength < blob.size) {
+            yield blob.slice(transferredLength, transferredLength + CHUNK_SIZE);
+            transferredLength += CHUNK_SIZE;
+        }
+        return null;
+    };
+    for (let blobChunk of getBlobChunks()) {
+        let arrayBufferChunk = await blobToArrayBuffer(blobChunk);
+        await asyncExec("addChunk", arrayBufferChunk);
+    }
+}
+
 module.exports = {
-    saveFile(blob, name = "") {
-        return keepBlob(blob) // see the “resume” event handler below
-            .then(() => locateFile(blob.type, name))
-            .then(uri => saveFileInChunks(uri, blob))
-            .then(uri => {
-                clearBlob();
-                return uri;
-            })
-            .catch(reason => {
-                clearBlob();
-                return Promise.reject(reason);
-            });
+    async saveFile(blob, name = "") {
+        try {
+            await keepBlob(blob); // see the “resume” event handler below
+            let uri = await asyncExec("locateFile", blob.type || "application/octet-stream", name);
+            await addChunks(blob);
+            return await asyncExec("saveFile", uri);
+        } catch (reason) {
+            return Promise.reject(reason);
+        } finally {
+            clearBlob();
+        }
     }
 };
 
 // If Android OS has destroyed the Cordova Activity in background, try to complete the Save operation
 // using the URI passed in the payload of the “resume” event and the blob stored by the BlobKeeper.
-// https://cordova.apache.org/docs/en/10.x/guide/platforms/android/plugin.html#launching-other-activities
-document.addEventListener("resume", ({pendingResult = {}}) => {
+// https://cordova.apache.org/docs/en/11.x/guide/platforms/android/plugin.html#launching-other-activities
+document.addEventListener("resume", async  ({pendingResult = {}}) => {
     if (pendingResult.pluginServiceName !== "SaveDialog") {
         return;
     }
@@ -81,12 +70,14 @@ document.addEventListener("resume", ({pendingResult = {}}) => {
         clearBlob();
         return;
     }
-    getBlob().then(blob => {
-        if (blob instanceof Blob) {
-            saveFile(pendingResult.result, blob).catch(reason => {
-                console.warn("[SaveDialog]", reason);
-            });
+    let blob = await getBlob();
+    if (blob instanceof Blob) {
+        try {
+            await addChunks(blob);
+            await asyncExec("saveFile", pendingResult.result);
+        } catch (reason) {
+            console.warn("[SaveDialog]", reason);
         }
-        clearBlob();
-    });
+    }
+    clearBlob();
 }, false);
