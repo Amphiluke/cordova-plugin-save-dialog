@@ -15,6 +15,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.io.FileOutputStream;
+import java.nio.channels.FileChannel;
 
 public class SaveDialog extends CordovaPlugin {
     private static final int LOCATE_FILE = 1;
@@ -27,7 +28,7 @@ public class SaveDialog extends CordovaPlugin {
         if (action.equals("locateFile")) {
             this.locateFile(args.getString(0), args.getString(1));
         } else if (action.equals("saveFile")) {
-            this.saveFile(Uri.parse(args.getString(0)), args.getString(1));
+            this.saveFile(Uri.parse(args.getString(0)), args.getString(1), args.getBoolean(2));
         } else {
             return false;
         }
@@ -63,12 +64,18 @@ public class SaveDialog extends CordovaPlugin {
         this.callbackContext = callbackContext;
     }
 
-    private void saveFile(Uri uri, String data) {
+    private void saveFile(Uri uri, String data, boolean clearFile) {
         try {
             byte[] rawData = Base64.decode(data, Base64.DEFAULT);
-            ParcelFileDescriptor pfd = cordova.getActivity().getContentResolver().openFileDescriptor(uri, "w");
+            ParcelFileDescriptor pfd = cordova.getActivity().getContentResolver().openFileDescriptor(uri, "wa");
             FileOutputStream fileOutputStream = new FileOutputStream(pfd.getFileDescriptor());
+
             try {
+                if (clearFile) {
+                    FileChannel fChan = fileOutputStream.getChannel();
+                    fChan.truncate(0);
+                }
+
                 fileOutputStream.write(rawData);
                 this.callbackContext.success(uri.toString());
             } catch (Exception e) {
