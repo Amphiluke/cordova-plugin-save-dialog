@@ -31,9 +31,9 @@ To construct a Blob representation for a file contents, either use the [`Blob` c
 let blob = new Blob(["file contents"], {type: "text/plain"});
 let fileName = "my-file.txt";
 cordova.plugins.saveDialog.saveFile(blob, fileName).then(uri => {
-    console.info("The file has been successfully saved to", uri);
+  console.info("The file has been successfully saved to", uri);
 }).catch(reason => {
-    console.warn(reason);
+  console.warn(reason);
 });
 ```
 
@@ -41,12 +41,14 @@ or apply other methods of blob generation (such as [`Response.blob()`](https://d
 
 ```javascript
 try {
-    let response = await fetch(`https://avatars.dicebear.com/api/avataaars/${Math.random()}.svg`);
-    let blob = await response.blob();
-    let uri = await cordova.plugins.saveDialog.saveFile(blob, "random-avatar.svg");
-    console.info("The file has been successfully saved to", uri);
+  let response = await fetch("https://httpbin.org/image/jpeg", {
+    headers: {Accept: "image/jpeg"}
+  });
+  let blob = await response.blob();
+  let uri = await cordova.plugins.saveDialog.saveFile(blob, "jackal.jpeg");
+  console.info("The file has been successfully saved to", uri);
 } catch (e) {
-    console.error(e);
+  console.error(e);
 }
 ```
 

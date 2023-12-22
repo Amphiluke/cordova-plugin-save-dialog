@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-save-dialog",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Cordova plugin for opening the native Save dialog and storing a file in the user-selected location",
   "main": "index.js",
   "scripts": {
